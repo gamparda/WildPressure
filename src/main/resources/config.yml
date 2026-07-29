@@ -1,0 +1,47 @@
+# WildPressure 0.1.0 - Paper 26.2 build 87
+population:
+  # 한 플레이어의 영향 구역이 단독일 때 목표로 삼는 실제 관리 몹 수
+  target-per-player: 5000
+  # 여러 청크를 하나의 생태 구역으로 묶는 한 변의 크기
+  region-size-chunks: 8
+  # 플레이어 중심으로 관리할 청크 반경
+  influence-radius-chunks: 10
+  # 재조정 주기. 짧을수록 빠르게 채우지만 생성/검사 비용이 커진다.
+  reconcile-period-ticks: 20
+  max-spawns-per-pass: 50
+  max-removals-per-pass: 20
+  max-index-refresh-per-pass: 250
+  # 영향 범위에서 벗어난 관리 몹을 제거하기 전 유예 시간
+  irrelevant-grace-seconds: 120
+  # 이 MSPT 이상에서는 신규 생성을 잠시 멈춘다.
+  pause-spawning-above-mspt: 45.0
+  adopt-existing-on-enable: true
+
+natural-spawn-control:
+  enabled: true
+  blocked-reasons:
+    - NATURAL
+    - CHUNK_GEN
+
+spawn:
+  min-distance-from-player: 32
+  max-location-attempts: 12
+  max-block-light: 15
+  keep-managed-mobs-from-vanilla-despawn: true
+  species:
+    - ZOMBIE
+    - ZOMBIE
+    - ZOMBIE
+    - SKELETON
+    - SKELETON
+    - SPIDER
+    - CREEPER
+
+# 한 구역에서 짧은 시간에 이 수 이상 죽으면 해당 구역은 고갈 상태가 된다.
+depletion:
+  deaths-to-deplete: 25
+  death-window-seconds: 120
+  refill-cooldown-seconds: 300
+
+messages:
+  prefix: '&2[WildPressure]&r '

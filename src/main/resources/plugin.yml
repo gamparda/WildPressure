@@ -1,0 +1,16 @@
+name: WildPressure
+version: '${project.version}'
+main: kr.gamparida.wildpressure.WildPressurePlugin
+api-version: '26.2'
+author: gamparida
+description: 실제 몹 개체군을 지역 단위로 직접 관리하는 야생 압력 시스템
+load: POSTWORLD
+commands:
+  wild:
+    description: WildPressure 관리 및 진단 명령어
+    usage: /wild <status|inspect|profiler|reload>
+    permission: wildpressure.admin
+permissions:
+  wildpressure.admin:
+    description: WildPressure 관리 명령어 사용 권한
+    default: op
