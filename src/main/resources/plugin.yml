@@ -8,7 +8,7 @@ load: POSTWORLD
 commands:
   wild:
     description: WildPressure 관리 및 진단 명령어
-    usage: /wild <status|inspect|profiler|reload>
+    usage: /wild <status|inspect|operations|profiler|lure|reload>
     permission: wildpressure.admin
 permissions:
   wildpressure.admin:

@@ -1,12 +1,13 @@
 package kr.gamparida.wildpressure;
 
+import kr.gamparida.wildpressure.ai.*;
 import kr.gamparida.wildpressure.command.WildCommand;
+import kr.gamparida.wildpressure.item.LureService;
+import kr.gamparida.wildpressure.listener.ContentListener;
 import kr.gamparida.wildpressure.listener.PopulationListener;
-import kr.gamparida.wildpressure.population.DepletionTracker;
-import kr.gamparida.wildpressure.population.EntityIndex;
-import kr.gamparida.wildpressure.population.SpawnDirector;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
+import kr.gamparida.wildpressure.population.*;
+import kr.gamparida.wildpressure.pressure.PressureTracker;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.event.HandlerList;
@@ -21,7 +22,9 @@ public final class WildPressurePlugin extends JavaPlugin {
     private EntityIndex index;
     private DepletionTracker depletion;
     private SpawnDirector director;
-    private PopulationListener listener;
+    private PressureTracker pressure;
+    private WildAiDirector ai;
+    private LureService lures;
 
     @Override public void onEnable() {
         saveDefaultConfig();
@@ -31,19 +34,21 @@ public final class WildPressurePlugin extends JavaPlugin {
         if (command == null) throw new IllegalStateException("plugin.yml에 wild 명령어가 없습니다.");
         command.setExecutor(wildCommand);
         command.setTabCompleter(wildCommand);
-        getLogger().info("WildPressure가 Paper 26.2 개체군 관리를 시작했습니다.");
+        getLogger().info("WildPressure가 Paper 26.2 개체군 및 콘텐츠 AI를 시작했습니다.");
     }
 
-    @Override public void onDisable() {
-        if (director != null) director.stop();
-        if (listener != null) HandlerList.unregisterAll(listener);
-    }
+    @Override public void onDisable() { shutdownRuntime(); }
 
     public void reloadRuntime() {
-        if (director != null) director.stop();
-        if (listener != null) HandlerList.unregisterAll(listener);
+        shutdownRuntime();
         reloadConfig();
         initialiseRuntime();
+    }
+
+    private void shutdownRuntime() {
+        if (ai != null) ai.stop();
+        if (director != null) director.stop();
+        HandlerList.unregisterAll(this);
     }
 
     private void initialiseRuntime() {
@@ -53,11 +58,19 @@ public final class WildPressurePlugin extends JavaPlugin {
                 Math.max(1, getConfig().getInt("depletion.deaths-to-deplete", 25)),
                 Math.max(1, getConfig().getLong("depletion.death-window-seconds", 120)) * 1000L,
                 Math.max(1, getConfig().getLong("depletion.refill-cooldown-seconds", 300)) * 1000L);
-        listener = new PopulationListener(index, depletion, blockedReasons());
-        Bukkit.getPluginManager().registerEvents(listener, this);
+        pressure = new PressureTracker(
+                Math.max(0, getConfig().getDouble("pressure.decay-per-second", 0.15)),
+                Math.max(1, getConfig().getDouble("pressure.maximum", 100)));
+        lures = new LureService(this);
+        SiegeService siege = new SiegeService(this);
+        RewardService rewards = new RewardService(this);
         recoverLoadedEntities();
         director = new SpawnDirector(this, index, depletion);
+        ai = new WildAiDirector(this, index, pressure, siege, rewards);
+        Bukkit.getPluginManager().registerEvents(new PopulationListener(index, depletion, ai, blockedReasons()), this);
+        Bukkit.getPluginManager().registerEvents(new ContentListener(this, ai, lures), this);
         director.start();
+        ai.start();
     }
 
     private Set<CreatureSpawnEvent.SpawnReason> blockedReasons() {
@@ -90,7 +103,13 @@ public final class WildPressurePlugin extends JavaPlugin {
         getLogger().info("로드된 관리 몹 " + recovered + "마리를 인덱스에 등록했습니다.");
     }
 
+    public String prefix() {
+        return ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.prefix", "&2[WildPressure]&r "));
+    }
     public EntityIndex index() { return index; }
     public DepletionTracker depletion() { return depletion; }
     public SpawnDirector director() { return director; }
+    public PressureTracker pressure() { return pressure; }
+    public WildAiDirector ai() { return ai; }
+    public LureService lures() { return lures; }
 }

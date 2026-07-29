@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>kr.gamparida</groupId>
     <artifactId>wildpressure</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <name>WildPressure</name>
     <description>Paper 26.2 managed wildlife population director</description>
 

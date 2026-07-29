@@ -1,10 +1,12 @@
 package kr.gamparida.wildpressure.listener;
 
+import kr.gamparida.wildpressure.ai.WildAiDirector;
 import kr.gamparida.wildpressure.population.DepletionTracker;
 import kr.gamparida.wildpressure.population.EntityIndex;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -20,12 +22,14 @@ import java.util.UUID;
 public final class PopulationListener implements Listener {
     private final EntityIndex index;
     private final DepletionTracker depletion;
+    private final WildAiDirector ai;
     private final Set<CreatureSpawnEvent.SpawnReason> blockedReasons;
 
-    public PopulationListener(EntityIndex index, DepletionTracker depletion,
+    public PopulationListener(EntityIndex index, DepletionTracker depletion, WildAiDirector ai,
                               Set<CreatureSpawnEvent.SpawnReason> blockedReasons) {
         this.index = index;
         this.depletion = depletion;
+        this.ai = ai;
         this.blockedReasons = blockedReasons.isEmpty() ? EnumSet.noneOf(CreatureSpawnEvent.SpawnReason.class)
                 : EnumSet.copyOf(blockedReasons);
     }
@@ -40,6 +44,8 @@ public final class PopulationListener implements Listener {
         UUID id = event.getEntity().getUniqueId();
         if (!index.isManaged(event.getEntity())) return;
         depletion.recordDeath(index.keyOf(event.getEntity()), System.currentTimeMillis());
+        Player killer = event.getEntity().getKiller();
+        ai.onManagedDeath(id, event.getEntity().getLocation(), killer == null ? null : killer.getUniqueId());
         index.unregister(id);
     }
 

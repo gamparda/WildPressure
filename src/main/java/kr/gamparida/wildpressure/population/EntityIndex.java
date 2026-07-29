@@ -62,6 +62,13 @@ public final class EntityIndex {
 
     public Collection<ManagedMob> snapshot() { return List.copyOf(byId.values()); }
 
+    public Entity entity(UUID entityId) {
+        ManagedMob managed = byId.get(entityId);
+        if (managed == null) return null;
+        World world = Bukkit.getWorld(managed.region().worldId());
+        return world == null ? null : world.getEntity(entityId);
+    }
+
     public Map<EntityType, Long> countTypes(RegionKey key) {
         Map<EntityType, Long> counts = new EnumMap<>(EntityType.class);
         Set<UUID> ids = byRegion.getOrDefault(key, Set.of());
@@ -98,7 +105,11 @@ public final class EntityIndex {
     }
 
     public RegionKey keyOf(Entity entity) {
-        return RegionKey.fromChunk(entity.getWorld().getUID(), entity.getLocation().getBlockX() >> 4,
-                entity.getLocation().getBlockZ() >> 4, regionSizeChunks);
+        return keyOf(entity.getWorld(), entity.getLocation().getBlockX() >> 4,
+                entity.getLocation().getBlockZ() >> 4);
+    }
+
+    public RegionKey keyOf(World world, int chunkX, int chunkZ) {
+        return RegionKey.fromChunk(world.getUID(), chunkX, chunkZ, regionSizeChunks);
     }
 }
